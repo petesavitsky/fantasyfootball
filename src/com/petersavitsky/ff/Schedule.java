@@ -34,6 +34,10 @@ public class Schedule {
 		System.out.println("Added week " + week + " matchup " + matchup);
 	}
 	
+	public synchronized void removeMatchupFromSchedule(Matchup matchup, int week) {
+		matchupsByWeek.get(week).removeMatchup(matchup);
+	}
+	
 	public synchronized Week getRandomWeek() {
 		Random r = new Random();
 		return matchupsByWeek.get(r.nextInt(numWeeks));

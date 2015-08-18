@@ -18,6 +18,10 @@ public class Week {
 	public boolean addMatchup(Matchup matchup) {
 		return matchups.add(matchup);
 	}
+	
+	public boolean removeMatchup(Matchup matchup) {
+		return matchups.remove(matchup);
+	}
 
 	public int getWeekNumber() {
 		return weekNumber;

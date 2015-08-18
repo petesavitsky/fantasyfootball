@@ -20,8 +20,8 @@ import com.petersavitsky.ff.Week;
 
 public class SchedulerTwo {
 
-	private static final String[] teamNames = new String[] { "Srev","Jack","Park","Krive","Mica",
-			"GBaby","Josh","Afshin","Luca","Pete"};
+	private static final String[] teamNames = new String[] { "Team 1", "Team 2", "Team 3", "Team 4", "Team 5"
+			,"Team 6", "Team 7", "Team 8", "Team 9", "Team 10"};
 	// Number of weeks in the season
 	private static final int NUM_WEEKS = 14; 
 	// Maximum number of head to head matchups between 2 teams
@@ -73,15 +73,15 @@ public class SchedulerTwo {
 			Matchup matchupToMove = secondMatchups.remove(i);
 			firstMatchups.add(matchupToMove);
 		}
-		Set<MatchupOccurence> matchupCountOne = createMatchupCountMap(firstMatchups);
-		Set<MatchupOccurence> matchupCountTwo = createMatchupCountMap(secondMatchups);
+		List<MatchupOccurence> matchupCountOne = createMatchupCountMap(firstMatchups);
+		List<MatchupOccurence> matchupCountTwo = createMatchupCountMap(secondMatchups);
 		Schedule schedule = new Schedule(NUM_WEEKS, teams);
 		buildSchedule(schedule, matchupCountOne);
 		buildSchedule(schedule, matchupCountTwo);
 		return schedule;
 	}
 	
-	private static Set<MatchupOccurence> createMatchupCountMap(List<Matchup> matchups) {
+	private static List<MatchupOccurence> createMatchupCountMap(List<Matchup> matchups) {
 		Map<Matchup,MatchupOccurence> matchupCount = new HashMap<>();
 		for (Matchup matchup : matchups) {
 			if (matchupCount.containsKey(matchup)) {
@@ -90,8 +90,9 @@ public class SchedulerTwo {
 				matchupCount.put(matchup, new MatchupOccurence(matchup));
 			}
 		}
-		SortedSet<MatchupOccurence> matchupOccurences = new TreeSet<>(new MatchupOccurence.MatchupOccurenceComparator());
+		List<MatchupOccurence> matchupOccurences = new ArrayList<>();
 		matchupOccurences.addAll(matchupCount.values());
+		Collections.sort(matchupOccurences, new MatchupOccurence.MatchupOccurenceComparator());
 		return matchupOccurences;
 	}
 	
@@ -102,8 +103,6 @@ public class SchedulerTwo {
 			for (int i = 1; i <= matchupOccurence.getNumberOfOccurences(); i++) {
 				if (!scheduleMatchup(schedule, matchupOccurence.getMatchup())) {
 					System.out.println("Couldn't schedule [" + i + "] time matchup [" + matchupOccurence.getMatchup() + "]");
-					printSchedule(schedule);
-					System.exit(0);
 				}
 			}
 		}
