@@ -31,11 +31,14 @@ public class Schedule {
 		for (Owner team : matchup.getTeams()) {
 			matchupsByTeam.get(team).put(week, matchup);
 		}
-		System.out.println("Added week " + week + " matchup " + matchup);
+		//System.out.println("Added week " + week + " matchup " + matchup);
 	}
 	
 	public synchronized void removeMatchupFromSchedule(Matchup matchup, int week) {
 		matchupsByWeek.get(week).removeMatchup(matchup);
+		for(Owner team : matchup.getTeams()) {
+			matchupsByTeam.get(team).remove(week);
+		}
 	}
 	
 	public synchronized Week getRandomWeek() {
@@ -47,27 +50,27 @@ public class Schedule {
 		
 		//is there any space this week?
 		if (matchupsByWeek.get(week).getMatchups().size() >= matchupsPerWeek) {
-			System.out.println("Week is already full");
+			//System.out.println("Week is already full");
 			return false;
 		}
 		// check if owner has matchup this week
 		for (Owner team : matchup.getTeams()) {
 			if (matchupsByTeam.get(team).containsKey(week)) {
-				System.out.println("Owner [" + team + "] already has a matchup in week [" + week + "]");
+				//System.out.println("Owner [" + team + "] already has a matchup in week [" + week + "]");
 				return false;
 			}
 		}
 		// check if the same matchup occurs last week or next week
 		if (matchupsByWeek.get(week - 1) != null && matchupsByWeek.get(week - 1).hasMatchup(matchup)) {
-			System.out.println("Matchup [" + matchup + "] occured last week [" + ( week - 1) + "]");
+			//System.out.println("Matchup [" + matchup + "] occured last week [" + ( week - 1) + "]");
 			return false;
 		} else if (matchupsByWeek.get(week + 1) != null && matchupsByWeek.get(week + 1).hasMatchup(matchup)) {
-			System.out.println("Matchup [" + matchup + "] is occuring next week [" + ( week + 1) + "]");
+			//System.out.println("Matchup [" + matchup + "] is occuring next week [" + ( week + 1) + "]");
 			return false;
 		}
 		
 		// matchup is ok
-		System.out.println("Matchup [" + matchup + "] is ok for week [" + week + "]");
+		//System.out.println("Matchup [" + matchup + "] is ok for week [" + week + "]");
 		return true;
 	}
 	
@@ -87,6 +90,14 @@ public class Schedule {
 		SortedSet<Week> weeks = new TreeSet<>(new Week.WeekComparatorMostMatchupsFirstThenRandom());
 		weeks.addAll(matchupsByWeek.values());
 		return weeks;
+	}
+	
+	public int getNumMatchupsScheduled() {
+		int matchups = 0;
+		for (Week week : matchupsByWeek.values()) {
+			matchups += week.numberOfMatchups();
+		}
+		return matchups;
 	}
 	
 }

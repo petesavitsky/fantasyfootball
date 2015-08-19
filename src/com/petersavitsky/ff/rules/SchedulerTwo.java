@@ -5,23 +5,23 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
 import java.util.SortedSet;
-import java.util.TreeSet;
 
 import com.petersavitsky.ff.Matchup;
-import com.petersavitsky.ff.MatchupOccurence;
 import com.petersavitsky.ff.Owner;
 import com.petersavitsky.ff.Schedule;
 import com.petersavitsky.ff.Week;
 
 public class SchedulerTwo {
 
-	private static final String[] teamNames = new String[] { "Team 1", "Team 2", "Team 3", "Team 4", "Team 5"
-			,"Team 6", "Team 7", "Team 8", "Team 9", "Team 10"};
+	private static final String[] teamNames = new String[] { "Srev","Jack","Park","Krive","Mica",
+			"GBaby","Josh","Afsh","Luca","Pete"};
+	/*{ "Team 1", "Team 2", "Team 3", "Team 4", "Team 5"
+			,"Team 6", "Team 7", "Team 8", "Team 9", "Team 10"};*/
 	// Number of weeks in the season
 	private static final int NUM_WEEKS = 14; 
 	// Maximum number of head to head matchups between 2 teams
@@ -37,12 +37,15 @@ public class SchedulerTwo {
 	
 	private static final int MATCHUPS_PER_WEEK = teamNames.length / 2;
 	
+	private static int maxAttempts = 4;
+	
 	// Let's run this shit
 	public static void main(String[] args) throws IOException {
 		populateOwners();
 		int maxMatchupsBeforeAllTeamsFirstMeeting = ALL_FIRST_MATCHUPS_BY_WEEK * MATCHUPS_PER_WEEK;
 		List<Matchup> allMatchups = createMatchupCombinations();
-		chooseMatchups(allMatchups, maxMatchupsBeforeAllTeamsFirstMeeting);
+		Schedule schedule = chooseMatchups(allMatchups, maxMatchupsBeforeAllTeamsFirstMeeting);
+		printSchedule(schedule);
 	}
 	
 	private static void populateOwners() {
@@ -64,8 +67,8 @@ public class SchedulerTwo {
 	}
 	
 	private static Schedule chooseMatchups(List<Matchup> allMatchups, int maxMatchupsBeforeFirstMeeting) throws IOException {
-		List<Matchup> firstMatchups = new ArrayList<>(allMatchups);
-		List<Matchup> secondMatchups = new ArrayList<>(allMatchups);
+		LinkedList<Matchup> firstMatchups = new LinkedList<>(allMatchups);
+		LinkedList<Matchup> secondMatchups = new LinkedList<>(allMatchups);
 		Collections.shuffle(firstMatchups);
 		Collections.shuffle(secondMatchups);
 		int elementsFromSecondList = maxMatchupsBeforeFirstMeeting - firstMatchups.size();
@@ -73,52 +76,51 @@ public class SchedulerTwo {
 			Matchup matchupToMove = secondMatchups.remove(i);
 			firstMatchups.add(matchupToMove);
 		}
-		List<MatchupOccurence> matchupCountOne = createMatchupCountMap(firstMatchups);
-		List<MatchupOccurence> matchupCountTwo = createMatchupCountMap(secondMatchups);
+		Collections.shuffle(firstMatchups);
+		Collections.shuffle(secondMatchups);
 		Schedule schedule = new Schedule(NUM_WEEKS, teams);
-		buildSchedule(schedule, matchupCountOne);
-		buildSchedule(schedule, matchupCountTwo);
+		System.out.println("First matchups " + firstMatchups.size());
+		System.out.println("Second matchups " + secondMatchups.size());
+		boolean firstMatchupsResult = buildSchedule(schedule, firstMatchups, 11, 1);
+		System.out.println("First matchups success " + firstMatchupsResult);
+		
+		System.out.println("Second matchups success " + buildSchedule(schedule, secondMatchups, 14, 1));
 		return schedule;
 	}
 	
-	private static List<MatchupOccurence> createMatchupCountMap(List<Matchup> matchups) {
-		Map<Matchup,MatchupOccurence> matchupCount = new HashMap<>();
-		for (Matchup matchup : matchups) {
-			if (matchupCount.containsKey(matchup)) {
-				matchupCount.get(matchup).incrementNumberOfOccurences();
-			} else {
-				matchupCount.put(matchup, new MatchupOccurence(matchup));
-			}
-		}
-		List<MatchupOccurence> matchupOccurences = new ArrayList<>();
-		matchupOccurences.addAll(matchupCount.values());
-		Collections.sort(matchupOccurences, new MatchupOccurence.MatchupOccurenceComparator());
-		return matchupOccurences;
-	}
-	
-	private static void buildSchedule(Schedule schedule, Set<MatchupOccurence> matchups) throws IOException {
-		// pick random weeks for dupe matchups
-		// random fill in other weeks shoot for highest filled weeks first
-		for (MatchupOccurence matchupOccurence : matchups) {
-			for (int i = 1; i <= matchupOccurence.getNumberOfOccurences(); i++) {
-				if (!scheduleMatchup(schedule, matchupOccurence.getMatchup())) {
-					System.out.println("Couldn't schedule [" + i + "] time matchup [" + matchupOccurence.getMatchup() + "]");
+	private static boolean buildSchedule(Schedule schedule, LinkedList<Matchup> matchups, int lastWeek, int depth) throws IOException {
+		Matchup currentMatchup = null;
+		SortedSet<Week> weeks = schedule.getWeeks();
+		LinkedList<Matchup> traversedMatchups = new LinkedList<>();
+		boolean success = false;
+		do {
+			currentMatchup = matchups.removeFirst();
+			LinkedList<Matchup> remainingMatchups = new LinkedList<>(matchups);
+			remainingMatchups.addAll(traversedMatchups);
+			for (Week week : weeks) {
+				LinkedList<Matchup> weeklyRemainingMatchups = new LinkedList<>(remainingMatchups);
+				if (week.getWeekNumber() > lastWeek) {
+					continue;
+				}
+				if (schedule.isMatchupValid(currentMatchup, week.getWeekNumber())) {
+					schedule.addMatchupToSchedule(currentMatchup, week.getWeekNumber());
+					System.out.println("Adding matchup [" + schedule.getNumMatchupsScheduled() + "]");
+					success = buildSchedule(schedule, weeklyRemainingMatchups, lastWeek, 1);
+					if (!success) {
+						System.out.println("Removing matchup [" + schedule.getNumMatchupsScheduled() + "]");
+						schedule.removeMatchupFromSchedule(currentMatchup, week.getWeekNumber());
+					} else {
+						return true;
+					}
 				}
 			}
-		}
-		System.out.println("Successfully scheduled everybody!");
-	}
-		
-	private static boolean scheduleMatchup(Schedule schedule, Matchup matchup) {
-		SortedSet<Week> weeks = schedule.getWeeks();
-		for (Week week : weeks) {
-			System.out.println("Scheduling for week [" + week + "]");
-			if (schedule.isMatchupValid(matchup, week.getWeekNumber())) {
-				schedule.addMatchupToSchedule(matchup, week.getWeekNumber());
-				return true;
+			traversedMatchups.add(currentMatchup);
+			depth++;
+			if (maxAttempts <= depth) {
+				System.out.println("Hit max attempts");
 			}
-		}
-		return false;
+		} while (!success && !matchups.isEmpty() && depth < maxAttempts);
+		return success;
 	}
 	
 	public static void printSchedule(Schedule schedule) throws IOException {
@@ -138,10 +140,10 @@ public class SchedulerTwo {
 					if (opponent != null) {
 						fileWriter.append(opponent.getOwnerName());
 					} else {
-						fileWriter.append("FAIL");
+						fileWriter.append("no_opponent");
 					}
 				} else {
-					fileWriter.append("FAIL");
+					fileWriter.append("no_matchup");
 				}
 				fileWriter.append(COMMA_DELIMITER);
 			}
