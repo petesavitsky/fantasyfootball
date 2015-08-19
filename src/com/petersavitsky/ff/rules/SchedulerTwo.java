@@ -31,7 +31,7 @@ public class SchedulerTwo {
 	// All first time matchups must be done before week
 	private static final int ALL_FIRST_MATCHUPS_BY_WEEK = 11;
 	
-	private static final String COMMA_DELIMITER = ",";
+	
 	
 	private static final List<Owner> teams = new ArrayList<>();
 	

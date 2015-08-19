@@ -10,9 +10,14 @@ public class Week {
 	
 	private final int weekNumber;
 	private final Set<Matchup> matchups = new HashSet<>();
+	private final Set<Owner> teamsScheduled = new HashSet<>();
 	
 	public Week(int weekNumber) {
 		this.weekNumber = weekNumber;
+	}
+	
+	public boolean isValid(int numTeams) {
+		return (teamsScheduled.size() == (numTeams/2)) && (matchups.size() == (numTeams/2));
 	}
 	
 	public boolean addMatchup(Matchup matchup) {
