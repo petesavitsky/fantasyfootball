@@ -32,7 +32,16 @@ public class Matchup {
 
 	@Override
 	public String toString() {
-		return "Matchup [teams=" + teams + "]";
+		StringBuilder sb = new StringBuilder();
+		boolean first = true;
+		for (Owner team : teams) {
+			sb.append(team.getOwnerName());
+			if (first) {
+				sb.append(" vs ");
+				first = false;
+			}
+		}
+		return sb.toString();
 	}
 
 	@Override

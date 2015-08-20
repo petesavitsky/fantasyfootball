@@ -1,9 +1,10 @@
 package com.petersavitsky.ff;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
+import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
@@ -13,6 +14,7 @@ public class Schedule {
 	private final Map<Owner, Map<Integer,Matchup>> matchupsByTeam = new HashMap<>();
 	private final Map<Matchup, Integer> matchupCount = new HashMap<>();
 	private final Map<Owner, Map<Matchup, Integer>> firstMeetingMatchupCount = new HashMap<>();
+	//private final Set<Matchup> allPossibleMatchups = new HashSet<>();
 	private final int matchupsPerWeek;
 	private final int numWeeks;
 	private final int firstMeetingByWeek = 11;
@@ -28,6 +30,7 @@ public class Schedule {
 			Map<Matchup, Integer> teamMatchupCount = new HashMap<>();
 			firstMeetingMatchupCount.put(team, teamMatchupCount);
 		}
+		//this.allPossibleMatchups.addAll(allPossibleMatchups);
 		numWeeks = numberOfWeeks;
 		matchupsPerWeek = teams.size() / 2;
 		for (int i = 1; i <= numWeeks; i++) {

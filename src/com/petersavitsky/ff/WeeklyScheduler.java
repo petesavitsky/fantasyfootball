@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -22,6 +23,7 @@ public class WeeklyScheduler {
 	private static final List<Owner> TEAMS = new ArrayList<>();
 	private static final Set<WeekPossibility> WEEK_POSSIBILITY_SET = new HashSet<>();
 	private static final List<WeekPossibility> WEEK_POSSIBILITY_LIST = new ArrayList<>();
+	private static final List<Set<WeekPossibility>> UNIQUE_MATCHUP_WEEK_POSSIBILITY_LIST = new ArrayList<>();
 	private static final List<Matchup> MATCHUPS = new ArrayList<>();
 	private static Schedule schedule;
 	
@@ -29,9 +31,10 @@ public class WeeklyScheduler {
 		populateOwners();
 		createMatchups();
 		shuffleMatchups();
-		createWeekPossibilities();
-		chooseWeeksOrder();
-		printSchedule();
+		createNonDupeWeekPossibilities();
+		//createWeekPossibilities();
+		//chooseWeeksOrder();
+		//printSchedule();
 		System.out.println("Created [" + WEEK_POSSIBILITY_SET.size() + "] valid week combinations");
 	}
 	
@@ -54,6 +57,44 @@ public class WeeklyScheduler {
 	
 	private static void shuffleMatchups() {
 		Collections.shuffle(MATCHUPS);
+	}
+	
+	private static void createNonDupeWeekPossibilities() {
+		Set<WeekPossibility> weeks = new HashSet<>();
+		List<Owner> shuffledTeams = new ArrayList<>(TEAMS);
+		Collections.shuffle(shuffledTeams);
+		Set<Matchup> usedMatchups = new HashSet<>();
+		WeekPossibility week = new WeekPossibility();
+		LoopingPointer pointer1 = new LoopingPointer(TEAMS.size() - 1);
+		LoopingPointer pointer2 = new LoopingPointer(TEAMS.size() - 1);
+		for (int i = 0; i < shuffledTeams.size(); i++) {
+			System.out.println(shuffledTeams.get(i));
+		}
+		pointer2.increment();
+		while (usedMatchups.size() < MATCHUPS.size()) {
+			Owner team1 = shuffledTeams.get(pointer1.value());
+			Owner team2 = shuffledTeams.get(pointer2.value());
+			Matchup matchup = new Matchup(team1, team2);
+			if (usedMatchups.contains(matchup) || !week.isValid(matchup)) {
+				if (week.getTeamsScheduled().contains(team1)) {
+					pointer1.increment();
+				}
+				pointer2.increment();
+				continue;
+			}
+			// this is a good matchup for this week!
+			usedMatchups.add(matchup);
+			week.addMatchup(matchup);
+			pointer2.increment();
+			pointer1.set(pointer2);
+			pointer2.increment();
+			if (week.numberOfMatchups() >= MATCHUPS_PER_WEEK) {
+				weeks.add(week);
+				System.out.println(week);
+				week = new WeekPossibility();
+			}
+		}
+		System.out.println("Found [" + weeks.size() + "] unique weeks");
 	}
 	
 	private static void createWeekPossibilities() {

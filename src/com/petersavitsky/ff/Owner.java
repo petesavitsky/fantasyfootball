@@ -39,6 +39,6 @@ public class Owner {
 
 	@Override
 	public String toString() {
-		return "Owner [ownerName=" + ownerName + "]";
+		return ownerName;
 	}
 }
