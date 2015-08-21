@@ -1,22 +1,22 @@
 package com.petersavitsky.ff;
 
-public class Owner {
+public class Team {
 
-	private final String ownerName;
+	private final String teamName;
 	
-	public Owner(String ownerName) {
-		this.ownerName = ownerName;
+	public Team(String teamName) {
+		this.teamName = teamName;
 	}
 
-	public String getOwnerName() {
-		return ownerName;
+	public String getTeamName() {
+		return teamName;
 	}
 
 	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + ((ownerName == null) ? 0 : ownerName.hashCode());
+		result = prime * result + ((teamName == null) ? 0 : teamName.hashCode());
 		return result;
 	}
 
@@ -28,17 +28,17 @@ public class Owner {
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		Owner other = (Owner) obj;
-		if (ownerName == null) {
-			if (other.ownerName != null)
+		Team other = (Team) obj;
+		if (teamName == null) {
+			if (other.teamName != null)
 				return false;
-		} else if (!ownerName.equals(other.ownerName))
+		} else if (!teamName.equals(other.teamName))
 			return false;
 		return true;
 	}
 
 	@Override
 	public String toString() {
-		return ownerName;
+		return teamName;
 	}
 }

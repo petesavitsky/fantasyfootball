@@ -8,21 +8,21 @@ import java.util.TreeSet;
 
 public class Matchup {
 	
-	private final SortedSet<Owner> teams;
+	private final SortedSet<Team> teams;
 	
-	public Matchup(Owner team1, Owner team2) {
-		SortedSet<Owner> teamSet = new TreeSet<>(new OwnerComparator());
+	public Matchup(Team team1, Team team2) {
+		SortedSet<Team> teamSet = new TreeSet<>(new OwnerComparator());
 		teamSet.add(team1);
 		teamSet.add(team2);
 		teams = Collections.unmodifiableSortedSet(teamSet);
 	}
 
-	public Set<Owner> getTeams() {
+	public Set<Team> getTeams() {
 		return teams;
 	}
 	
-	public Owner getOpponent(Owner team) {
-		for (Owner opponent : teams) {
+	public Team getOpponent(Team team) {
+		for (Team opponent : teams) {
 			if (!opponent.equals(team)) {
 				return opponent;
 			}
@@ -34,8 +34,8 @@ public class Matchup {
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
 		boolean first = true;
-		for (Owner team : teams) {
-			sb.append(team.getOwnerName());
+		for (Team team : teams) {
+			sb.append(team.getTeamName());
 			if (first) {
 				sb.append(" vs ");
 				first = false;
@@ -69,12 +69,12 @@ public class Matchup {
 		return true;
 	}
 	
-	private static class OwnerComparator implements Comparator<Owner> {
+	private static class OwnerComparator implements Comparator<Team> {
 
 		// should always be alphabetically sorted by owner name
 		@Override
-		public int compare(Owner team1, Owner team2) {
-			return team1.getOwnerName().compareTo(team2.getOwnerName());
+		public int compare(Team team1, Team team2) {
+			return team1.getTeamName().compareTo(team2.getTeamName());
 		}
 		
 	}

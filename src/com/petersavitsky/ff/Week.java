@@ -10,7 +10,7 @@ public class Week {
 	
 	private final int weekNumber;
 	private final Set<Matchup> matchups = new HashSet<>();
-	private final Set<Owner> teamsScheduled = new HashSet<>();
+	private final Set<Team> teamsScheduled = new HashSet<>();
 	
 	public Week(int weekNumber) {
 		this.weekNumber = weekNumber;

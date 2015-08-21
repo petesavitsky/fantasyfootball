@@ -9,7 +9,7 @@ import java.util.Set;
 public class WeekPossibility {
 	
 	private final Set<Matchup> matchups = new HashSet<>();
-	private final Set<Owner> teamsScheduled = new HashSet<>();
+	private final Set<Team> teamsScheduled = new HashSet<>();
 	boolean isValid = true;
 	
 	public WeekPossibility() { /* */}
@@ -21,15 +21,16 @@ public class WeekPossibility {
 	
 	public boolean isValid(Matchup matchup) {
 		boolean valid = !matchups.contains(matchup);
-		for (Owner team : matchup.getTeams()) {
+		for (Team team : matchup.getTeams()) {
 			valid = !teamsScheduled.contains(team) && valid;
 		}
+		valid = matchup.getTeams().size() == 2 && valid;
 		return valid;
 	}
 	
 	public boolean addMatchup(Matchup matchup) {
 		boolean teamsAdded = true;
-		for (Owner team : matchup.getTeams()) {
+		for (Team team : matchup.getTeams()) {
 			teamsAdded = teamsScheduled.add(team) && teamsAdded;
 		}
 		boolean matchupAdded = matchups.add(matchup);
@@ -54,7 +55,7 @@ public class WeekPossibility {
 		return matchups.size();
 	}
 
-	public Set<Owner> getTeamsScheduled() {
+	public Set<Team> getTeamsScheduled() {
 		return teamsScheduled;
 	}
 	
@@ -96,7 +97,7 @@ public class WeekPossibility {
 
 	@Override
 	public String toString() {
-		return "Week [matchups=" + matchups + "]";
+		return "Week [" + matchups + "]";
 	}
 	
 	public static class WeekComparatorMostMatchupsFirstThenRandom implements Comparator<WeekPossibility> {

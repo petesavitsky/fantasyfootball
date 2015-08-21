@@ -8,157 +8,130 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.Map.Entry;
+import java.util.Random;
 
 public class WeeklyScheduler {
 
 	private static final String COMMA_DELIMITER = ",";
 	private static final String[] teamNames = new String[] { "Srev","Jack","Park","Krive","Mica",
 			"GBaby","Josh","Afsh","Luca","Pete"};
-	private static final int MATCHUPS_PER_WEEK = 5;
 	private static final int NUMBER_OF_WEEKS = 14;
 	private static final int WEEK_DEADLINE = 11;
-	private static final int MAX_DUPLICATES_BEFORE_WEEK_DEADLINE = 10;
-	private static final List<Owner> TEAMS = new ArrayList<>();
-	private static final Set<WeekPossibility> WEEK_POSSIBILITY_SET = new HashSet<>();
-	private static final List<WeekPossibility> WEEK_POSSIBILITY_LIST = new ArrayList<>();
-	private static final List<Set<WeekPossibility>> UNIQUE_MATCHUP_WEEK_POSSIBILITY_LIST = new ArrayList<>();
-	private static final List<Matchup> MATCHUPS = new ArrayList<>();
-	private static Schedule schedule;
+	private static final List<Team> TEAMS = new ArrayList<>();
+	private static ScheduleByWeek schedule;
 	
 	public static void main(String[] args) throws IOException {
 		populateOwners();
-		createMatchups();
-		shuffleMatchups();
-		createNonDupeWeekPossibilities();
-		//createWeekPossibilities();
-		//chooseWeeksOrder();
-		//printSchedule();
-		System.out.println("Created [" + WEEK_POSSIBILITY_SET.size() + "] valid week combinations");
+		makeSchedule();
+		validateSchedule();
+		printSchedule();
+	}
+	
+	private static void validateSchedule() {
+		if (!schedule.isScheduleValid()) {
+			throw new RuntimeException("Invalid schedule");
+		}
+	}
+	
+	private static List<WeekPossibility> rotate() {
+		List<Team> teams1 = new ArrayList<>();
+		List<Team> teams2 = new ArrayList<>();
+		Random r = new Random();
+		for (Team team : TEAMS) {
+			if (r.nextInt(2) == 0 && teams1.size() < TEAMS.size() / 2 || teams2.size() == TEAMS.size()/2) {
+				teams1.add(team);
+			} else {
+				teams2.add(team);
+			}
+		}
+		Collections.shuffle(teams1);
+		Collections.shuffle(teams2);
+		return createSchedule(teams1, teams2);
+	}
+	
+	private static List<WeekPossibility> createSchedule(List<Team> teams1, List<Team> teams2) {
+		List<WeekPossibility> weeks = new ArrayList<>();
+		for (int i = 1; i <= NUMBER_OF_WEEKS; i++) {
+			WeekPossibility week = new WeekPossibility();
+			for (int j = 0; j < teams1.size() && j < teams2.size(); j++) {
+				Matchup matchup = new Matchup(teams1.get(j), teams2.get(j));
+				week.addMatchup(matchup);
+			}
+			weeks.add(week);
+			Team team1Shift = teams1.remove(1);
+			Team team2Shift = teams2.remove(teams2.size() - 1);
+			teams1.add(teams1.size(), team2Shift);
+			teams2.add(0, team1Shift);
+		}
+		return weeks;
 	}
 	
 	private static void populateOwners() {
 		for (String teamName : teamNames) {
-			Owner team = new Owner(teamName);
+			Team team = new Team(teamName);
 			TEAMS.add(team);
 		}
-		schedule = new Schedule(NUMBER_OF_WEEKS, TEAMS);
 	}
 	
-	private static void createMatchups() {
-		for (int i = 0; i < TEAMS.size() - 1; i++) {
-			for (int j = i+1; j < TEAMS.size(); j++) {
-				Matchup matchup = new Matchup(TEAMS.get(i), TEAMS.get(j));
-				MATCHUPS.add(matchup);
-			}
-		}
-	}
-	
-	private static void shuffleMatchups() {
-		Collections.shuffle(MATCHUPS);
-	}
-	
-	private static void createNonDupeWeekPossibilities() {
-		Set<WeekPossibility> weeks = new HashSet<>();
-		List<Owner> shuffledTeams = new ArrayList<>(TEAMS);
-		Collections.shuffle(shuffledTeams);
-		Set<Matchup> usedMatchups = new HashSet<>();
-		WeekPossibility week = new WeekPossibility();
-		LoopingPointer pointer1 = new LoopingPointer(TEAMS.size() - 1);
-		LoopingPointer pointer2 = new LoopingPointer(TEAMS.size() - 1);
-		for (int i = 0; i < shuffledTeams.size(); i++) {
-			System.out.println(shuffledTeams.get(i));
-		}
-		pointer2.increment();
-		while (usedMatchups.size() < MATCHUPS.size()) {
-			Owner team1 = shuffledTeams.get(pointer1.value());
-			Owner team2 = shuffledTeams.get(pointer2.value());
-			Matchup matchup = new Matchup(team1, team2);
-			if (usedMatchups.contains(matchup) || !week.isValid(matchup)) {
-				if (week.getTeamsScheduled().contains(team1)) {
-					pointer1.increment();
-				}
-				pointer2.increment();
-				continue;
-			}
-			// this is a good matchup for this week!
-			usedMatchups.add(matchup);
-			week.addMatchup(matchup);
-			pointer2.increment();
-			pointer1.set(pointer2);
-			pointer2.increment();
-			if (week.numberOfMatchups() >= MATCHUPS_PER_WEEK) {
-				weeks.add(week);
-				System.out.println(week);
-				week = new WeekPossibility();
-			}
-		}
-		System.out.println("Found [" + weeks.size() + "] unique weeks");
-	}
-	
-	private static void createWeekPossibilities() {
-		WeekPossibility week = new WeekPossibility();
-		createWeek(MATCHUPS, week, 0);
-		WEEK_POSSIBILITY_LIST.addAll(WEEK_POSSIBILITY_SET);
-	}
-	
-	private static void createWeek(List<Matchup> matchups, WeekPossibility week, int depth) {
-		if (depth >= MATCHUPS_PER_WEEK) {
-			WEEK_POSSIBILITY_SET.add(week);
-		}
-		for (int i = 0; i < matchups.size(); i++) {
-			WeekPossibility nextPossibility = new WeekPossibility(week);
-			if (nextPossibility.isValid(matchups.get(i))) {
-				nextPossibility.addMatchup(matchups.get(i));
-				createWeek(matchups, nextPossibility, depth + 1);
-			} else {
-				continue;
-			}
-		}
-	}
-	
-	private static void chooseWeeksOrder() {
-		for (int i = 1; i <= NUMBER_OF_WEEKS; i++) {
-			int weeksChecked = 0;
-			Collections.shuffle(WEEK_POSSIBILITY_LIST);
-			for (WeekPossibility weekPossibility : WEEK_POSSIBILITY_LIST) {
-				System.out.println("Week [" + i + "] attempt [" + weeksChecked++ + "]");
-				if (isWeekOkToSchedule(weekPossibility, i)) {
-					for (Matchup matchup : weekPossibility.getMatchups()) {
-						schedule.addMatchupToSchedule(matchup, i);
+	private static void makeSchedule() throws IOException {
+		schedule = new ScheduleByWeek(NUMBER_OF_WEEKS, WEEK_DEADLINE, new HashSet<>(TEAMS));
+		List<WeekPossibility> firstSet = rotate();
+		List<WeekPossibility> secondSet = rotate();
+		System.out.println("first set " + firstSet);
+		System.out.println("second set " + secondSet);
+		int scheduledWeek = 1;
+		int availableBonusWeeks = 2;
+		Random random = new Random();
+		while (scheduledWeek <= NUMBER_OF_WEEKS) {
+			int bonusDecider = random.nextInt(2);
+			if (bonusDecider == 1) {
+				if (scheduledWeek > 1 && availableBonusWeeks > 0 || scheduledWeek > 11) {
+					if(attemptToSchedule(secondSet, scheduledWeek)) {
+						System.out.println("Scheduling bonus week [" + scheduledWeek + "]");
+						scheduledWeek++;
+						availableBonusWeeks--;
 					}
-					break;
+				}
+			} else {
+				if(attemptToSchedule(firstSet, scheduledWeek)) {
+					System.out.println("Scheduling normal week [" + scheduledWeek + "]");
+					scheduledWeek++;
 				}
 			}
 		}
+		printSchedule();
 	}
 	
-	private static boolean isWeekOkToSchedule(WeekPossibility weekPossibility, int week) {
-		for (Matchup matchup : weekPossibility.getMatchups()) {
-			if (!schedule.isMatchupValid(matchup, week)) {
-				return false;
+	private static boolean attemptToSchedule(List<WeekPossibility> weeks, int weekNumber) {
+		Iterator<WeekPossibility> iter = weeks.iterator();
+		while (iter.hasNext()) {
+			WeekPossibility possibility = iter.next();
+			if (schedule.isWeekPossibilityValid(possibility, weekNumber)) {
+				schedule.addWeekPossibility(possibility, weekNumber);
+				iter.remove();
+				return true;
 			}
 		}
-		return true;
+		return false;
 	}
 	
 	private static void printSchedule() throws IOException {
 		FileWriter fileWriter = new FileWriter("/Users/petersavitsky/fantasySchedule.csv");
 		fileWriter.append("Owner");
-		for (int i = 0; i < schedule.getNumWeeks(); i++) {
+		for (int i = 0; i < NUMBER_OF_WEEKS; i++) {
 			fileWriter.append(COMMA_DELIMITER);
 			fileWriter.append("Week " + (i+1));
 		}
 		fileWriter.append("\n");
-		for (Entry<Owner, Map<Integer, Matchup>> entry : schedule.getMatchupsByTeam().entrySet()) {
-			fileWriter.append(entry.getKey().getOwnerName()).append(COMMA_DELIMITER);
+		for (Entry<Team, Map<Integer, Matchup>> entry : schedule.getMatchupsByTeam().entrySet()) {
+			fileWriter.append(entry.getKey().getTeamName()).append(COMMA_DELIMITER);
 			for(int i = 1; i <= entry.getValue().size(); i++) {
 				Matchup matchup = entry.getValue().get(i);
 				if (matchup != null) {
-					Owner opponent = matchup.getOpponent(entry.getKey());
+					Team opponent = matchup.getOpponent(entry.getKey());
 					if (opponent != null) {
-						fileWriter.append(opponent.getOwnerName());
+						fileWriter.append(opponent.getTeamName());
 					} else {
 						fileWriter.append("no_opponent");
 					}
