@@ -14,8 +14,8 @@ import java.util.Random;
 public class WeeklyScheduler {
 
 	private static final String COMMA_DELIMITER = ",";
-	private static final String[] teamNames = new String[] { "Srev","Jack","Park","Krive","Mica",
-			"GBaby","Josh","Afsh","Luca","Pete"};
+	private static final String[] teamNames = new String[] { "Team 1", "Team 2", "team 3", 
+			"team 4", "team 5", "team 6", "team 7", "team 8", "team 9", "team 10"};
 	private static final int NUMBER_OF_WEEKS = 14;
 	private static final int WEEK_DEADLINE = 11;
 	private static final List<Team> TEAMS = new ArrayList<>();
